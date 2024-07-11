@@ -5,8 +5,6 @@
 //  Created by Nowroz Islam on 10/7/24.
 //
 
-import CoreImage
-import CoreImage.CIFilterBuiltins
 import PhotosUI
 import SwiftUI
 
