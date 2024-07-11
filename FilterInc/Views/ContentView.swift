@@ -6,9 +6,12 @@
 //
 
 import PhotosUI
+import StoreKit
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.requestReview) private var requestReview
+    @AppStorage("filterChangedCount") private var filterChangedCount: Int = 0
     @State private var viewModel: ViewModel = ViewModel()
     
     var body: some View {
@@ -89,21 +92,35 @@ struct ContentView: View {
             }
             .padding()
             .navigationTitle("FilterInc")
+            .onChange(of: viewModel.processedImage, requestReviewIfPossible)
             .onChange(of: viewModel.photosPickerItem, viewModel.loadImage)
             .onChange(of: viewModel.intensity, viewModel.applyProcessing)
             .onChange(of: viewModel.radius, viewModel.applyProcessing)
             .onChange(of: viewModel.scale, viewModel.applyProcessing)
             .onChange(of: viewModel.sharpness, viewModel.applyProcessing)
             .confirmationDialog("Change Filter", isPresented: $viewModel.showingConfirmationDialog) {
-                Button("Bloom") { viewModel.setFilter(.bloom())}
-                Button("Color Invert") { viewModel.setFilter(.colorInvert()) }
-                Button("Crystalize") { viewModel.setFilter(.crystallize()) }
-                Button("Gloom") { viewModel.setFilter(.gloom()) }
-                Button("Guassian Blur") { viewModel.setFilter(.gaussianBlur()) }
-                Button("Pixellate") { viewModel.setFilter(.pixellate()) }
-                Button("Sepia Tone") { viewModel.setFilter(.sepiaTone()) }
+                Button("Bloom") { setFilter(.bloom())}
+                Button("Color Invert") { setFilter(.colorInvert()) }
+                Button("Crystalize") { setFilter(.crystallize()) }
+                Button("Gloom") { setFilter(.gloom()) }
+                Button("Guassian Blur") { setFilter(.gaussianBlur()) }
+                Button("Pixellate") { setFilter(.pixellate()) }
+                Button("Sepia Tone") { setFilter(.sepiaTone()) }
                 Button("Sharpen Luminance") { viewModel.setFilter(.sharpenLuminance()) }
-                Button("Vignette") { viewModel.setFilter(.vignette()) }
+                Button("Vignette") { setFilter(.vignette()) }
+            }
+        }
+    }
+    
+    func setFilter(_ filter: CIFilter) {
+        filterChangedCount += 1
+        viewModel.setFilter(filter)
+    }
+    
+    func requestReviewIfPossible() {
+        if filterChangedCount > 20 {
+            Task { @MainActor in
+                requestReview()
             }
         }
     }
